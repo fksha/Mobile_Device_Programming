@@ -2,109 +2,214 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:orientation="vertical"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:orientation="vertical">
 
-    <TextView
-        android:id="@+id/textView_FIO"
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/fio" />
+        android:layout_height="match_parent">
 
-    <EditText
-        android:id="@+id/editTextFIO"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:ems="10"
-        android:hint="@string/enter_fio"
-        android:inputType="text"
-        android:minHeight="48dp" />
-
-    <TextView
-        android:id="@+id/textViewGender"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/gender" />
-
-    <RadioGroup
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" >
-
-        <RadioButton
-            android:id="@+id/radioButton_M"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:minHeight="48dp"
-            android:text="@string/male" />
+            android:layout_marginLeft="15dp"
+            android:layout_marginTop="20dp"
+            android:layout_marginRight="15dp"
+            android:layout_marginBottom="30dp"
+            android:orientation="vertical">
 
-        <RadioButton
-            android:id="@+id/radioButton_W"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:minHeight="48dp"
-            android:text="@string/female" />
-    </RadioGroup>
+            <TextView
+                android:id="@+id/textView_FIO"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="30dp"
+                android:text="@string/fio"
+                android:textAlignment="viewStart"
+                android:textColor="#000000"
+                android:textSize="18sp" />
 
-    <TextView
-        android:id="@+id/textViewCourse"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/course" />
+            <EditText
+                android:id="@+id/editTextFIO"
+                android:layout_width="match_parent"
+                android:layout_height="57dp"
+                android:ems="10"
+                android:hint="@string/enter_fio"
+                android:inputType="text"
+                android:minHeight="48dp"
+                android:textColor="#000000"
+                android:textColorHint="#7A7878"
+                android:textColorLink="#008476"
+                android:textSize="16sp" />
 
-    <Spinner
-        android:id="@+id/spinnerCourse"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+            <TextView
+                android:id="@+id/textViewGender"
+                android:layout_width="match_parent"
+                android:layout_height="26dp"
+                android:text="@string/gender"
+                android:textColor="#000000"
+                android:textSize="18sp" />
 
-    <TextView
-        android:id="@+id/textViewDifficulty"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/difficulty" />
+            <RadioGroup
+                android:id="@+id/radioGroup"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
 
-    <SeekBar
-        android:id="@+id/seekBarDifficulty"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:max="10"
-        android:progress="1" />
+                <RadioButton
+                    android:id="@+id/radioButton_M"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:minHeight="48dp"
+                    android:text="@string/male"
+                    android:textSize="16sp" />
 
-    <TextView
-        android:id="@+id/textViewBirthDate"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/birth_date" />
+                <RadioButton
+                    android:id="@+id/radioButton_W"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:minHeight="48dp"
+                    android:text="@string/female"
+                    android:textSize="16sp" />
+            </RadioGroup>
 
-    <CalendarView
-        android:id="@+id/calendarViewBirthDate"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+            <TextView
+                android:id="@+id/textViewCourse"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/course"
+                android:textColor="#000000"
+                android:textSize="18sp"
+                android:visibility="visible"
+                tools:visibility="visible" />
 
-    <Button
-        android:id="@+id/buttonCalc"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/zodiac_calc" />
+            <Spinner
+                android:id="@+id/spinnerCourse"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:entries="@array/courses" />
 
-    <ImageView
-        android:id="@+id/imageViewZodiac"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:visibility="gone"
-        tools:src="@tools:sample/avatars" />
+            <TextView
+                android:id="@+id/textViewDifficulty"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/difficulty"
+                android:textColor="#000000"
+                android:textColorLink="#008476"
+                android:textSize="18sp" />
 
-    <Button
-        android:id="@+id/buttonSave"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/save" />
+            <SeekBar
+                android:id="@+id/seekBarDifficulty"
+                style="@android:style/Widget.Material.SeekBar.Discrete"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:max="10"
+                android:progress="1"
+                android:progressTint="#335EF6"
+                android:thumbTint="#145BFF"
+                android:tickMarkTint="#115911" />
 
-    <TextView
-        android:id="@+id/textViewResult"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="TextView"
-        android:visibility="gone" />
+            <TextView
+                android:id="@+id/textViewBirthDate"
+                android:layout_width="match_parent"
+                android:layout_height="34dp"
+                android:text="@string/birth_date"
+                android:textColor="#000000"
+                android:textSize="18sp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal">
+
+                <EditText
+                    android:id="@+id/editTextYear"
+                    android:layout_width="169dp"
+                    android:layout_height="match_parent"
+                    android:ems="10"
+                    android:hint="Введите год"
+                    android:inputType="text"
+                    android:textColorHint="#818181"
+                    android:textSize="16sp" />
+
+                <Button
+                    android:id="@+id/buttonSetYear"
+                    android:layout_width="218dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:background="@drawable/button_background"
+                    android:backgroundTint="#349DF8"
+                    android:text="Установить год" />
+            </LinearLayout>
+
+            <CalendarView
+                android:id="@+id/calendarViewBirthDate"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="#F8F8F8"
+                android:focusedMonthDateColor="#F0E4E4"
+                android:foregroundTint="#FAF9F9"
+                android:visibility="visible" />
+
+            <Button
+                android:id="@+id/buttonCalc"
+                android:layout_width="243dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:background="@drawable/button_background"
+                android:backgroundTint="#349EFA"
+                android:text="@string/zodiac_calc" />
+
+            <ImageView
+                android:id="@+id/imageViewZodiac"
+                android:layout_width="match_parent"
+                android:layout_height="200dp"
+                android:visibility="gone"
+                tools:src="@tools:sample/avatars" />
+
+            <Button
+                android:id="@+id/buttonSave"
+                android:layout_width="191dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                android:background="@drawable/button_background"
+                android:backgroundTint="#ACFF6F"
+                android:text="@string/save" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginBottom="40dp"
+                android:background="@drawable/button_background"
+                android:backgroundTint="#D7D7D7"
+                android:orientation="horizontal"
+                android:paddingLeft="10dp">
+
+                <TextView
+                    android:id="@+id/textViewResult"
+                    android:layout_width="183dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="30dp"
+                    android:layout_marginBottom="30dp"
+                    android:text="TextView"
+                    android:textColor="@color/black"
+                    android:textSize="16sp"
+                    android:textStyle="italic"
+                    android:visibility="gone" />
+
+                <ImageView
+                    android:id="@+id/imageView"
+                    android:layout_width="101dp"
+                    android:layout_height="140dp"
+                    android:layout_marginLeft="25dp"
+                    android:layout_marginTop="30dp"
+                    android:layout_marginBottom="30dp"
+                    android:src="@drawable/aquarius"
+                    android:visibility="gone" />
+            </LinearLayout>
+
+        </LinearLayout>
+    </ScrollView>
 
 </LinearLayout>
