@@ -1,5 +1,8 @@
 package com.example.bugs_android.logic
 
+import android.widget.Toast
+import com.example.bugs_android.R
+
 fun сalculateZodiac(day: Int, month: Int) : String {
     if ((day >= 21 && month  == 3) || (day <= 19 && month == 4)){
         return "Овен"
@@ -39,4 +42,22 @@ fun сalculateZodiac(day: Int, month: Int) : String {
     }
     else
         return "Неизвестно"
+}
+
+fun getZodiacImage(zodiac: String): Int{
+    return when(zodiac){
+        "Овен" -> R.drawable.aries
+        "Телец" -> R.drawable.taurus
+        "Близнецы" -> R.drawable.gemini
+        "Рак" -> R.drawable.cancer
+        "Лев" -> R.drawable.leo
+        "Дева" -> R.drawable.virgo
+        "Весы" -> R.drawable.libra
+        "Скорпион" -> R.drawable.scorpio
+        "Стрелец" -> R.drawable.sagittarius
+        "Козерог" -> R.drawable.capricorn
+        "Водолей" -> R.drawable.aquarius
+        "Рыбы" -> R.drawable.pisces
+        else -> 0
+    }
 }
