@@ -1,3 +1,19 @@
 <resources>
     <string name="app_name">Bugs_Android</string>
+    
+    <string name="fio">ФИО</string>
+    <string name="enter_fio">Введите ФИО</string>
+    
+    <string name="gender">Пол</string>
+    <string name="male">Мужской</string>
+    <string name="female">Женский</string>
+
+    <string name="course">Курс</string>
+
+    <string name="difficulty">Сложность игры</string>
+
+    <string name="birth_date">Дата рождения</string>
+
+    <string name="zodiac_calc">Определить знак зодиака</string>
+    <string name="save">Сохранить</string>
 </resources>
