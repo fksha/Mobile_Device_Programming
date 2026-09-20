@@ -1,9 +1,9 @@
 <resources>
     <string name="app_name">Bugs_Android</string>
-    
+
     <string name="fio">ФИО</string>
     <string name="enter_fio">Введите ФИО</string>
-    
+
     <string name="gender">Пол</string>
     <string name="male">Мужской</string>
     <string name="female">Женский</string>
@@ -23,4 +23,6 @@
 
     <string name="zodiac_calc">Определить знак зодиака</string>
     <string name="save">Сохранить</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

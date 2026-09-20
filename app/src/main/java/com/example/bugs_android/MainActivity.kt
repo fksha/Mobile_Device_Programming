@@ -41,7 +41,7 @@ class MainActivity : FragmentActivity(){
                 0 -> "Регистрация"
                 1 -> "Правила"
                 2 -> "Авторы"
-                3 -> "Натсройки"
+                3 -> "Настройки"
                 else -> ""
             }
         }.attach()
