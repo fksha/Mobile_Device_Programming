@@ -10,5 +10,6 @@ data class Bug (
     val size: Int,
     val type: BugType,
     val points: Int,
-    val imageResource: Int
+    val imageResource: Int,
+    var angle: Float = 0f,
 )

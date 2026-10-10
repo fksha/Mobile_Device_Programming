@@ -40,8 +40,9 @@ class MainActivity : FragmentActivity(){
             tab.text = when(position){
                 0 -> "Регистрация"
                 1 -> "Правила"
-                2 -> "Авторы"
-                3 -> "Настройки"
+                2 -> "Игра"
+                3 -> "Авторы"
+                4 -> "Настройки"
                 else -> ""
             }
         }.attach()

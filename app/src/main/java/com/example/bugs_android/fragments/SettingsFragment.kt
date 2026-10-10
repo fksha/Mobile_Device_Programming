@@ -24,22 +24,22 @@ class SettingsFragment : Fragment() {
         val textViewSpeed = view.findViewById<TextView>(R.id.textViewSpeed)
         val seekBarSpeed = view.findViewById<SeekBar>(R.id.seekBarSpeed)
 
-        setTextView(seekBarSpeed, textViewSpeed, "Скорость игры")
+        setTextView(seekBarSpeed, textViewSpeed, "Скорость игры", "speed")
 
         val textViewCountBugs = view.findViewById<TextView>(R.id.textViewCountBugs)
         val seekBarCountBugs = view.findViewById<SeekBar>(R.id.seekBarCountBugs)
 
-        setTextView(seekBarCountBugs, textViewCountBugs, "Максимальное количество жуков на экране")
+        setTextView(seekBarCountBugs, textViewCountBugs, "Максимальное количество жуков на экране", "maxBugs")
 
         val textViewBonusInterval = view.findViewById<TextView>(R.id.textViewBonusInterval)
         val seekBarBonusInterval = view.findViewById<SeekBar>(R.id.seekBarInterval)
 
-        setTextView(seekBarBonusInterval, textViewBonusInterval, "Интервал появления бонусов (сек)")
+        setTextView(seekBarBonusInterval, textViewBonusInterval, "Интервал появления бонусов (сек)", "bonusInterval")
 
         val textViewTimeRound = view.findViewById<TextView>(R.id.textViewTimeRound)
         val seekBarTimeRound = view.findViewById<SeekBar>(R.id.seekBarTimeRound)
 
-        setTextView(seekBarTimeRound, textViewTimeRound, "Длительность раунда (сек)")
+        setTextView(seekBarTimeRound, textViewTimeRound, "Длительность раунда (сек)", "roundDuration")
 
 
 
@@ -47,7 +47,15 @@ class SettingsFragment : Fragment() {
     }
 }
 
-fun setTextView(seekBar: SeekBar, textView: TextView, text: String){
+fun setTextView(seekBar: SeekBar, textView: TextView, text: String, key: String){
+    val preferences = seekBar.context.getSharedPreferences(
+        "game_settings",
+        android.content.Context.MODE_PRIVATE
+    )
+
+    seekBar.progress = preferences.getInt(key, seekBar.progress)
+    textView.text = "$text: ${seekBar.progress}"
+
     seekBar.setOnSeekBarChangeListener(
         object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(
@@ -56,6 +64,10 @@ fun setTextView(seekBar: SeekBar, textView: TextView, text: String){
                 fromUser: Boolean
             ) {
                 textView.text = "$text: $progress"
+                preferences.edit()
+                    .putInt(key, progress)
+                    .apply()
+
             }
 
             override fun onStartTrackingTouch(seekBar: SeekBar?) {}
