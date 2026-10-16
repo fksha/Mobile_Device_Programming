@@ -6,6 +6,8 @@ data class ScoreWithUsers(
     val userName: String,
     val points: Int,
     val difficulty: Int,
+    val speed: Int,
+    val roundDuration: Int,
     val hits: Int,
     val misses: Int,
     val accuracy: Float,

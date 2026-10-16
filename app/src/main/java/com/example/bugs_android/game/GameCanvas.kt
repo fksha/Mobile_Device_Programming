@@ -28,6 +28,8 @@ import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.bugs_android.R
+import com.example.bugs_android.data.GameDatabase
+import com.example.bugs_android.data.ScoreEntity
 import com.example.bugs_android.enumC.BugType
 import com.example.bugs_android.logic.createBug
 import com.example.bugs_android.model.Bug
@@ -35,18 +37,20 @@ import kotlin.math.atan2
 import kotlin.math.sqrt
 import kotlin.random.Random
 import kotlinx.coroutines.delay
-
+import androidx.compose.runtime.*
 private const val LOGICAL_WIDTH = 1000f
 private const val LOGICAL_HEIGHT = 1000f
 private const val TOP_PANEL_HEIGHT = 130f
 
 @Composable
-fun GameCanvas() {
+fun GameCanvas(userId: Int, onChangePlayer: () -> Unit) {
     val bugs = remember { mutableStateListOf<Bug>() }
 
     val targets = remember { mutableStateMapOf<Int, Offset>() }
 
     val context = LocalContext.current
+
+    val database = remember { GameDatabase.getDatabase(context) }
 
     val preferences = remember {
         context.getSharedPreferences(
@@ -59,11 +63,13 @@ fun GameCanvas() {
 
     val isGameStarted = remember { mutableStateOf(false) }
 
-    val isCountingDown = remember { mutableStateOf(false) }
+    val isCountingDown = remember { mutableStateOf(true) }
 
     val countdown = remember { mutableIntStateOf(3) }
 
     val gameSession = remember { mutableIntStateOf(0) }
+
+    var savedSession by remember { mutableIntStateOf(-1) }
 
     val nextBugId = remember { mutableIntStateOf(1) }
 
@@ -113,7 +119,12 @@ fun GameCanvas() {
         ) {
             if (bugs.size < maxBugs) {
                 val id = nextBugId.intValue++
-                val type = BugType.entries.random()
+                //val type = BugType.entries.random()
+                val type = when (Random.nextInt(100)) {
+                    in 0..50 -> BugType.NORMAL
+                    in 51..81 -> BugType.FAST
+                    else -> BugType.RARE
+                }
 
                 val bug = createBug(
                     type = type,
@@ -180,7 +191,7 @@ fun GameCanvas() {
                 val step = bug.speed * speedMultiplier * deltaTime
 
                 if (distance <= step || distance < 0.1f) {
-                    // Жук достиг цели — выбираем следующую
+                    // Жук достиг цели да
                     bugs[index] = bug.copy(
                         x = target.x,
                         y = target.y,
@@ -211,6 +222,27 @@ fun GameCanvas() {
         hits.intValue * 100 / (hits.intValue + misses.intValue)
     } else {
         0
+    }
+
+    LaunchedEffect(isGameOver.value, gameSession.intValue) {
+        if (isGameOver.value && savedSession != gameSession.intValue
+        ) {
+            database.scoreDao().insertScore(
+                ScoreEntity(
+                    userId = userId,
+                    points = score.intValue,
+                    difficulty = preferences.getInt("difficulty", 1),
+                    speed = preferences.getInt("speed", 5),
+                    roundDuration = roundDuration,
+                    hits = hits.intValue,
+                    misses = misses.intValue,
+                    accuracy = accuracy.toFloat(),
+                    date = System.currentTimeMillis()
+                )
+            )
+
+            savedSession = gameSession.intValue
+        }
     }
 
     val timeLeft = remember { mutableIntStateOf(roundDuration) }
@@ -311,7 +343,7 @@ fun GameCanvas() {
 
         // Начальный экран
 
-        if (!isGameStarted.value && !isCountingDown.value && !isGameOver.value) {
+       /* if (!isGameStarted.value && !isCountingDown.value && !isGameOver.value) {
             Box(
                 modifier = Modifier
                     .align(Alignment.Center),
@@ -325,8 +357,7 @@ fun GameCanvas() {
                 )
             }
         }
-
-        // Обратный отсчёт
+*/        // Обратный отсчёт
         if (isCountingDown.value) {
             Text(
                 text = countdown.intValue.toString(),
@@ -363,7 +394,8 @@ fun GameCanvas() {
                         isCountingDown.value = true
 
                         gameSession.intValue++
-                    }
+                    } ,
+                    onChangePlayerClick = onChangePlayer
                 )
             }
         }

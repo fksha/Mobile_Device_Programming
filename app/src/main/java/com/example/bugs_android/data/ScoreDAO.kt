@@ -15,6 +15,8 @@ interface ScoreDAO {
                users.name AS userName,
                scores.points,
                scores.difficulty,
+               scores.speed,
+               scores.roundDuration,
                scores.hits,
                scores.misses,
                scores.accuracy,

@@ -23,8 +23,11 @@ data class ScoreEntity(
     val userId: Int,
     val points: Int,
     val difficulty: Int,
+    val speed: Int,
+    val roundDuration: Int,
     val hits: Int,
     val misses: Int,
     val accuracy: Float,
     val date: Long
+
 )

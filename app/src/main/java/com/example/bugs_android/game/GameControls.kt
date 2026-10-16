@@ -55,8 +55,8 @@ fun GameStartScreen( onStartClick: () -> Unit) {
 
 
 @Composable
-fun GameResultsScreen( score: Int, hits: Int, misses: Int, accuracy: Int, onReplayClick: () -> Unit
-) {
+fun GameResultsScreen( score: Int, hits: Int, misses: Int, accuracy: Int, onReplayClick: () -> Unit,
+                       onChangePlayerClick: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -94,6 +94,17 @@ fun GameResultsScreen( score: Int, hits: Int, misses: Int, accuracy: Int, onRepl
                 text = "Играть снова",
                 fontSize = 18.sp
             )
+        }
+
+        Button(
+            onClick = onChangePlayerClick,
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = GameBlue,
+                contentColor = Color.White
+            )
+        ) {
+            Text("Сменить игрока", fontSize = 18.sp)
         }
     }
 }
