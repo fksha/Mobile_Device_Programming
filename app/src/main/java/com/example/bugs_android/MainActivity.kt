@@ -43,6 +43,7 @@ class MainActivity : FragmentActivity(){
                 2 -> "Игра"
                 3 -> "Авторы"
                 4 -> "Настройки"
+                5 -> "Рекорды"
                 else -> ""
             }
         }.attach()
