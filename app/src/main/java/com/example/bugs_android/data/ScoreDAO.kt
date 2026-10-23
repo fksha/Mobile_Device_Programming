@@ -23,7 +23,7 @@ interface ScoreDAO {
                scores.date
         FROM scores
         INNER JOIN users ON scores.userId = users.id
-        ORDER BY scores.points DESC
+        ORDER BY scores.points DESC, users.id ASC
     """)
     suspend fun getAllScores(): List<ScoreWithUsers>
 }
