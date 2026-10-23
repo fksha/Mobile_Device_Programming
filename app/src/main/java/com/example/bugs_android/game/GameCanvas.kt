@@ -38,6 +38,8 @@ import kotlin.math.sqrt
 import kotlin.random.Random
 import kotlinx.coroutines.delay
 import androidx.compose.runtime.*
+import androidx.compose.ui.graphics.nativeCanvas
+
 private const val LOGICAL_WIDTH = 1000f
 private const val LOGICAL_HEIGHT = 1000f
 private const val TOP_PANEL_HEIGHT = 130f
@@ -49,6 +51,12 @@ fun GameCanvas(userId: Int, onChangePlayer: () -> Unit) {
     val targets = remember { mutableStateMapOf<Int, Offset>() }
 
     val context = LocalContext.current
+
+
+
+    val bonusPosition = remember { mutableStateOf<Offset?>(null) }//6
+
+    val isBonusActive = remember { mutableStateOf(false) }//6
 
     val database = remember { GameDatabase.getDatabase(context) }
 
@@ -87,6 +95,21 @@ fun GameCanvas(userId: Int, onChangePlayer: () -> Unit) {
     val normalImage = ImageBitmap.imageResource(R.drawable.bug_normal)
     val fastImage = ImageBitmap.imageResource(R.drawable.bug_fast)
     val rareImage = ImageBitmap.imageResource(R.drawable.bug_rare)
+
+    //Появление бонуса каждые 15 сек
+    LaunchedEffect(gameSession.intValue, isGameStarted.value) {
+        while (isGameStarted.value && !isGameOver.value){
+            delay(15_000L)
+
+            if(isGameStarted.value && !isGameOver.value){
+                if (bonusPosition.value == null){
+                    val x = Random.nextFloat() * LOGICAL_WIDTH
+                    val y = TOP_PANEL_HEIGHT + Random.nextFloat() * (LOGICAL_HEIGHT - TOP_PANEL_HEIGHT)
+                    bonusPosition.value = Offset(x, y)
+                }
+            }
+        }
+    }
 
     // Обратный отсчёт перед началом игры
     LaunchedEffect(isCountingDown.value, countdown.intValue) {
@@ -296,6 +319,16 @@ fun GameCanvas(userId: Int, onChangePlayer: () -> Unit) {
                         val tapY =
                             tapOffset.y * LOGICAL_HEIGHT / size.height
 
+                        //проверяем нажатие на бонус
+                        val bonus = bonusPosition.value
+
+                        if (bonus != null && kotlin.math.abs(tapX - bonus.x) < 60f &&
+                            kotlin.math.abs(tapY - bonus.y) < 60f){
+                            bonusPosition.value = null
+                            isBonusActive.value = true
+                            return@detectTapGestures
+                        }
+
                         // Нажатие на верхнюю панель не считается промахом
                         if (tapY < TOP_PANEL_HEIGHT) {
                             return@detectTapGestures
@@ -329,6 +362,20 @@ fun GameCanvas(userId: Int, onChangePlayer: () -> Unit) {
                 fastImage = fastImage,
                 rareImage = rareImage
             )
+
+            //БОНУС
+            bonusPosition.value?.let{position ->
+                drawContext.canvas.nativeCanvas.drawText(
+                    "🌀",
+                    position.x * size.width / LOGICAL_WIDTH,
+                    position.y * size.height / LOGICAL_HEIGHT,
+                    android.graphics.Paint().apply {
+                        textSize = 110f
+                        textAlign = android.graphics.Paint.Align.CENTER
+                    }
+
+                )
+            }
         }
 
         // Панель статистики во время игры
