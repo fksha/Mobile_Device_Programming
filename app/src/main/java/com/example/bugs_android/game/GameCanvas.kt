@@ -39,6 +39,13 @@ import kotlin.random.Random
 import kotlinx.coroutines.delay
 import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.runtime.DisposableEffect
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
+import android.media.AudioAttributes
+import android.media.SoundPool
 
 private const val LOGICAL_WIDTH = 1000f
 private const val LOGICAL_HEIGHT = 1000f
@@ -52,11 +59,121 @@ fun GameCanvas(userId: Int, onChangePlayer: () -> Unit) {
 
     val context = LocalContext.current
 
+    val soundPool = remember {
+        SoundPool.Builder()
+            .setMaxStreams(1)
+            .setAudioAttributes(
+                AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_GAME)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .build()
+            )
+            .build()
+    }
 
+    val soundId = remember { mutableIntStateOf(0) }
+    val soundLoaded = remember { mutableStateOf(false) }
+    var lastSoundTime by remember { mutableLongStateOf(0L) }
+
+    DisposableEffect(soundPool) {
+        soundPool.setOnLoadCompleteListener { _, sampleId, status ->
+            if (status == 0) {
+                soundId.intValue = sampleId
+                soundLoaded.value = true
+            }
+        }
+
+        soundPool.load(context, R.raw.sound, 1)
+
+        onDispose {
+            soundPool.release()
+        }
+    }
+
+    //6 SensorManager позволяет получать данные от датчиков телефона
+    //TYPE_ACCELEROMETER выбирает акселерометр.
+    //getDefaultSensor() возвращает доступный датчик или null, если его нет.
+    val sensorManager = remember { context.getSystemService(Context.SENSOR_SERVICE) as SensorManager }
+
+    val accelerometer = remember { sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) }
 
     val bonusPosition = remember { mutableStateOf<Offset?>(null) }//6
 
     val isBonusActive = remember { mutableStateOf(false) }//6
+
+    var bonusTimeLeft by remember { mutableIntStateOf(0) }
+
+    //6 наклон телефона по вертикали и горизонтали
+    val tiltX = remember { mutableFloatStateOf(0f) }
+    val tiltY = remember { mutableFloatStateOf(0f) }
+
+    DisposableEffect(isBonusActive.value, accelerometer) {
+        if (!isBonusActive.value || accelerometer == null) {
+            onDispose { }
+        } else {
+            val listener = object : SensorEventListener {
+                override fun onSensorChanged(event: SensorEvent) {
+                    val newX = event.values[0]
+                    val newY = event.values[1]
+
+                    val changeX = kotlin.math.abs(newX - tiltX.floatValue)
+                    val changeY = kotlin.math.abs(newY - tiltY.floatValue)
+
+                    if (changeX > 0.3f || changeY > 0.3f) {
+                        val currentTime = System.currentTimeMillis()
+
+                        if (soundLoaded.value &&
+                            currentTime - lastSoundTime >= 1000L
+                        ) {
+                            soundPool.play(
+                                soundId.intValue,
+                                1f,
+                                1f,
+                                1,
+                                0,
+                                1f
+                            )
+
+                            lastSoundTime = currentTime
+                        }
+                    }
+
+                    tiltX.floatValue = newX
+                    tiltY.floatValue = newY
+                }
+
+                override fun onAccuracyChanged(
+                    sensor: Sensor?,
+                    accuracy: Int
+                ) {
+                }
+            }
+
+            sensorManager.registerListener(
+                listener,
+                accelerometer,
+                SensorManager.SENSOR_DELAY_GAME
+            )
+
+            onDispose {
+                sensorManager.unregisterListener(listener)
+            }
+        }
+    }
+
+    //дизактивация бонуса
+    LaunchedEffect(isBonusActive.value) {
+        if (isBonusActive.value) {
+            bonusTimeLeft = 5
+
+            while (bonusTimeLeft > 0) {
+                delay(1000L)
+                bonusTimeLeft--
+            }
+
+            isBonusActive.value = false
+        }
+    }
 
     val database = remember { GameDatabase.getDatabase(context) }
 
@@ -103,8 +220,11 @@ fun GameCanvas(userId: Int, onChangePlayer: () -> Unit) {
 
             if(isGameStarted.value && !isGameOver.value){
                 if (bonusPosition.value == null){
-                    val x = Random.nextFloat() * LOGICAL_WIDTH
-                    val y = TOP_PANEL_HEIGHT + Random.nextFloat() * (LOGICAL_HEIGHT - TOP_PANEL_HEIGHT)
+                    val margin = 60f
+
+                    val x = margin + Random.nextFloat() * (LOGICAL_WIDTH - 2 * margin)
+                    val y = TOP_PANEL_HEIGHT + margin +
+                            Random.nextFloat() * (LOGICAL_HEIGHT - TOP_PANEL_HEIGHT - 2 * margin)
                     bonusPosition.value = Offset(x, y)
                 }
             }
@@ -196,7 +316,52 @@ fun GameCanvas(userId: Int, onChangePlayer: () -> Unit) {
 
             for (index in bugs.indices) {
                 val bug = bugs[index]
+
+                if (isBonusActive.value) {
+                    val tiltSpeed = 350f
+                    val dx = -tiltX.floatValue * tiltSpeed * speedMultiplier * deltaTime
+                    val dy = tiltY.floatValue * tiltSpeed * speedMultiplier * deltaTime
+
+                    bugs[index] = bug.copy(
+                        x = (bug.x + dx).coerceIn(
+                            0f,
+                            LOGICAL_WIDTH - bug.size
+                        ),
+                        y = (bug.y + dy).coerceIn(
+                            TOP_PANEL_HEIGHT,
+                            LOGICAL_HEIGHT - bug.size
+                        )
+                    )
+
+                    continue
+                }
+
                 val target = targets[bug.id] ?: continue
+
+//                val dx = target.x - bug.x
+//                val dy = target.y - bug.y
+
+                val targetX = if(isBonusActive.value){
+                    when {
+                        tiltX.floatValue > 1f -> LOGICAL_WIDTH - bug.size
+                        tiltX.floatValue < -1f -> 0f
+                        else -> target.x
+                    }
+                }
+                else{
+                    target.x
+                }
+
+                val targetY = if(isBonusActive.value){
+                    when{
+                        tiltY.floatValue < -1f -> TOP_PANEL_HEIGHT
+                        tiltY.floatValue > 1f -> LOGICAL_HEIGHT - bug.size
+                        else -> target.y
+                    }
+                }
+                else{
+                    target.y
+                }
 
                 val dx = target.x - bug.x
                 val dy = target.y - bug.y
@@ -216,8 +381,8 @@ fun GameCanvas(userId: Int, onChangePlayer: () -> Unit) {
                 if (distance <= step || distance < 0.1f) {
                     // Жук достиг цели да
                     bugs[index] = bug.copy(
-                        x = target.x,
-                        y = target.y,
+                        x = targetX,
+                        y = targetY,
                         angle = smoothAngle
                     )
 
@@ -326,6 +491,19 @@ fun GameCanvas(userId: Int, onChangePlayer: () -> Unit) {
                             kotlin.math.abs(tapY - bonus.y) < 60f){
                             bonusPosition.value = null
                             isBonusActive.value = true
+                            bonusTimeLeft = 5
+
+                            if (soundLoaded.value) {
+                                soundPool.play(
+                                    soundId.intValue,
+                                    1f,
+                                    1f,
+                                    1,
+                                    0,
+                                    1f
+                                )
+                            }
+
                             return@detectTapGestures
                         }
 
@@ -370,7 +548,7 @@ fun GameCanvas(userId: Int, onChangePlayer: () -> Unit) {
                     position.x * size.width / LOGICAL_WIDTH,
                     position.y * size.height / LOGICAL_HEIGHT,
                     android.graphics.Paint().apply {
-                        textSize = 110f
+                        textSize = 110f * size.width / LOGICAL_WIDTH
                         textAlign = android.graphics.Paint.Align.CENTER
                     }
 
@@ -433,6 +611,12 @@ fun GameCanvas(userId: Int, onChangePlayer: () -> Unit) {
 
                         bugs.clear()
                         targets.clear()
+
+                        bonusPosition.value = null
+                        isBonusActive.value = false
+                        tiltX.floatValue = 0f
+                        tiltY.floatValue = 0f
+
                         nextBugId.intValue = 1
 
                         isGameOver.value = false
