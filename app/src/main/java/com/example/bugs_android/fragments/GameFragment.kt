@@ -16,11 +16,14 @@ import com.example.bugs_android.data.UserEntity
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import com.example.bugs_android.GameViewModel
 import com.example.bugs_android.game.GameCanvas
 import com.example.bugs_android.game.GameEntryScreen
 import kotlinx.coroutines.launch
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class GameFragment : Fragment() {
+    private val gameViewModel: GameViewModel by viewModel()
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -32,9 +35,9 @@ class GameFragment : Fragment() {
             setContent {
                 //GameCanvas()
                 var users by remember { mutableStateOf<List<UserEntity>>(emptyList()) }
-                var selectedUsers by remember { mutableStateOf<UserEntity?>(null) }
+                //var selectedUsers by remember { mutableStateOf<UserEntity?>(null) }
 
-                var isGameStarted by remember { mutableStateOf(false) }
+                //var isGameStarted by remember { mutableStateOf(false) }
                 val coroutineScope = rememberCoroutineScope()
 
                 LaunchedEffect(Unit) {
@@ -42,11 +45,12 @@ class GameFragment : Fragment() {
 
                 }
 
-                if(!isGameStarted){
+                if(!gameViewModel.isGameStarted){
                     GameEntryScreen(
                         users = users,
+                        selectedUserId = gameViewModel.selectedUserId,
                         onSelectUser = { user ->
-
+                            gameViewModel.selectUser(user.id)
                         },
 
                         onRegisterUser = { name ->
@@ -75,8 +79,7 @@ class GameFragment : Fragment() {
                             }
                         },
                         onStartGame = {user ->
-                            selectedUsers = user
-                            isGameStarted = true
+                            gameViewModel.startGame(user.id)
                         },
                         onDeleteUser = { user ->
                             coroutineScope.launch {
@@ -91,14 +94,17 @@ class GameFragment : Fragment() {
                                 ).show()
                             }
                         },
+                        onSelectUserCleared = {
+                            gameViewModel.clearSelectedUser()
+                        }
 
                     )
                 }
                 else{
-                    GameCanvas(userId = selectedUsers!!.id,
+                    GameCanvas(userId = gameViewModel.selectedUserId!!,
+                        viewModel = gameViewModel,
                         onChangePlayer = {
-                            selectedUsers = null
-                            isGameStarted = false
+                            gameViewModel.changePlayer()
                         })
                 }
 
