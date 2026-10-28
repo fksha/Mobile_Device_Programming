@@ -24,10 +24,12 @@ import com.example.bugs_android.data.UserEntity
 @Composable
 fun GameEntryScreen(
     users: List<UserEntity>,
+    selectedUserId: Int?,
     onSelectUser: (UserEntity) -> Unit,
     onRegisterUser: (String) -> Unit,
     onStartGame:(UserEntity) -> Unit,
-    onDeleteUser:(UserEntity) -> Unit
+    onDeleteUser:(UserEntity) -> Unit,
+    onSelectUserCleared: () -> Unit,
 ) {
     var playerName by remember {
         mutableStateOf("")
@@ -37,9 +39,9 @@ fun GameEntryScreen(
         mutableStateOf<UserEntity?>(null)
     }
 
-    var selectedUser by remember {
-        mutableStateOf<UserEntity?>(null)
-    }
+//    var selectedUser by remember {
+//        mutableStateOf<UserEntity?>(null)
+//    }
 
     Column(
         modifier = Modifier
@@ -59,11 +61,11 @@ fun GameEntryScreen(
             ) {
                 Button(
                     onClick = {
-                        selectedUser = user
+                        onSelectUser(user)
                     },
                     modifier = Modifier.weight(1f),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (selectedUser?.id == user.id) {
+                        containerColor = if (selectedUserId == user.id) {
                             Color(0xFF0108CA)
                         } else {
                             Color(0xFF7077FF)
@@ -104,8 +106,8 @@ fun GameEntryScreen(
                             userToDelete?.let { user ->
                                 onDeleteUser(user)
 
-                                if (selectedUser?.id == user.id) {
-                                    selectedUser = null
+                                if (selectedUserId == user.id) {
+                                    onSelectUserCleared()
                                 }
                             }
 
@@ -159,11 +161,11 @@ fun GameEntryScreen(
 
         Button(
             onClick = {
-                selectedUser?.let { user ->
+                users.find { it.id == selectedUserId }?.let {user ->
                     onStartGame(user)
                 }
             },
-            enabled = selectedUser != null,
+            enabled = users.any { it.id == selectedUserId },
             modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color(0xFF0108CA),

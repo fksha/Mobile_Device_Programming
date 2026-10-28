@@ -46,6 +46,7 @@ import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.media.AudioAttributes
 import android.media.SoundPool
+import com.example.bugs_android.GameViewModel
 import com.example.bugs_android.network.GoldRateRepository
 import kotlin.math.roundToInt
 
@@ -53,13 +54,14 @@ private const val LOGICAL_WIDTH = 1000f
 private const val LOGICAL_HEIGHT = 1000f
 private const val TOP_PANEL_HEIGHT = 130f
 
-private const val GOLD_BUG_INTERVAL = 20_000L
 
 @Composable
-fun GameCanvas(userId: Int, onChangePlayer: () -> Unit) {
-    val bugs = remember { mutableStateListOf<Bug>() }
+fun GameCanvas(userId: Int, viewModel: GameViewModel, onChangePlayer: () -> Unit) {
+    //val bugs = remember { mutableStateListOf<Bug>() }
+    val bugs = viewModel.bugs
 
-    val targets = remember { mutableStateMapOf<Int, Offset>() }
+    //val targets = remember { mutableStateMapOf<Int, Offset>() }
+    val targets = viewModel.targets
 
     val context = LocalContext.current
 
@@ -101,18 +103,18 @@ fun GameCanvas(userId: Int, onChangePlayer: () -> Unit) {
 
     val accelerometer = remember { sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) }
 
-    val bonusPosition = remember { mutableStateOf<Offset?>(null) }//6
+    //val bonusPosition = remember { mutableStateOf<Offset?>(null) }//6
 
-    val isBonusActive = remember { mutableStateOf(false) }//6
+    //val isBonusActive = remember { mutableStateOf(false) }//6
 
-    var bonusTimeLeft by remember { mutableIntStateOf(0) }
+    //var bonusTimeLeft by remember { mutableIntStateOf(0) }
 
     //6 наклон телефона по вертикали и горизонтали
     val tiltX = remember { mutableFloatStateOf(0f) }
     val tiltY = remember { mutableFloatStateOf(0f) }
 
-    DisposableEffect(isBonusActive.value, accelerometer) {
-        if (!isBonusActive.value || accelerometer == null) {
+    DisposableEffect(viewModel.isBonusActive, accelerometer) {
+        if (!viewModel.isBonusActive || accelerometer == null) {
             onDispose { }
         } else {
             val listener = object : SensorEventListener {
@@ -166,16 +168,14 @@ fun GameCanvas(userId: Int, onChangePlayer: () -> Unit) {
     }
 
     //дизактивация бонуса
-    LaunchedEffect(isBonusActive.value) {
-        if (isBonusActive.value) {
-            bonusTimeLeft = 5
-
-            while (bonusTimeLeft > 0) {
+    LaunchedEffect(viewModel.isBonusActive) {
+        if (viewModel.isBonusActive) {
+            while (viewModel.bonusTimeLeft > 0) {
                 delay(1000L)
-                bonusTimeLeft--
+                viewModel.decreaseBonusTime()
             }
 
-            isBonusActive.value = false
+            viewModel.deactivateBonus()
         }
     }
 
@@ -188,19 +188,20 @@ fun GameCanvas(userId: Int, onChangePlayer: () -> Unit) {
         )
     }
 
-    val isGameOver = remember { mutableStateOf(false) }
+    //val isGameOver = remember { mutableStateOf(false) }
 
-    val isGameStarted = remember { mutableStateOf(false) }
+    //val isGameStarted = remember { mutableStateOf(false) }
 
-    val isCountingDown = remember { mutableStateOf(true) }
+    //val isCountingDown = remember { mutableStateOf(true) }
 
-    val countdown = remember { mutableIntStateOf(3) }
+    //val countdown = remember { mutableIntStateOf(3) }
 
-    val gameSession = remember { mutableIntStateOf(0) }
+    //val gameSession = remember { mutableIntStateOf(0) }
 
-    var savedSession by remember { mutableIntStateOf(-1) }
+    //var savedSession by remember { mutableIntStateOf(-1) }
 
-    val nextBugId = remember { mutableIntStateOf(1) }
+    //
+    // val nextBugId = remember { mutableIntStateOf(1) }
 
     val canvasWidth = remember { mutableIntStateOf(0) }
 
@@ -213,7 +214,7 @@ fun GameCanvas(userId: Int, onChangePlayer: () -> Unit) {
     val roundDuration = preferences.getInt("roundDuration", 60)
 
     //7
-    var lastGoldBugTime by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    //var lastGoldBugTime by remember { mutableLongStateOf(System.currentTimeMillis()) }
 
     val normalImage = ImageBitmap.imageResource(R.drawable.bug_normal)
     val fastImage = ImageBitmap.imageResource(R.drawable.bug_fast)
@@ -222,35 +223,29 @@ fun GameCanvas(userId: Int, onChangePlayer: () -> Unit) {
     val goldImage = ImageBitmap.imageResource(R.drawable.bug_gold)
 
     //Появление бонуса каждые 15 сек
-    LaunchedEffect(gameSession.intValue, isGameStarted.value) {
-        while (isGameStarted.value && !isGameOver.value){
+    LaunchedEffect(viewModel.gameSession, viewModel.isRoundRunning) {
+        while (viewModel.isRoundRunning && !viewModel.isGameOver){
             delay(15_000L)
 
-            if(isGameStarted.value && !isGameOver.value){
-                if (bonusPosition.value == null){
+            if(viewModel.isRoundRunning && !viewModel.isGameOver){
+                if (viewModel.bonusPosition == null){
                     val margin = 60f
 
                     val x = margin + Random.nextFloat() * (LOGICAL_WIDTH - 2 * margin)
                     val y = TOP_PANEL_HEIGHT + margin +
                             Random.nextFloat() * (LOGICAL_HEIGHT - TOP_PANEL_HEIGHT - 2 * margin)
-                    bonusPosition.value = Offset(x, y)
+
+                    viewModel.updateBonusPosition(Offset(x, y))
                 }
             }
         }
     }
 
     // Обратный отсчёт перед началом игры
-    LaunchedEffect(isCountingDown.value, countdown.intValue) {
-        if (isCountingDown.value && countdown.intValue > 0) {
+    LaunchedEffect(viewModel.isCountingDown, viewModel.countdown) {
+        if (viewModel.isCountingDown && viewModel.countdown > 0) {
             delay(1000L)
-
-            if (countdown.intValue > 1) {
-                countdown.intValue--
-            } else {
-                countdown.intValue = 0
-                isCountingDown.value = false
-                isGameStarted.value = true
-            }
+            viewModel.tickCountdown()
         }
     }
 
@@ -258,18 +253,18 @@ fun GameCanvas(userId: Int, onChangePlayer: () -> Unit) {
     LaunchedEffect(
         canvasWidth.intValue,
         canvasHeight.intValue,
-        gameSession.intValue,
-        isGameOver.value,
-        isGameStarted.value
+        viewModel.gameSession,
+        viewModel.isGameOver,
+        viewModel.isRoundRunning
     ) {
         while (
             canvasWidth.intValue > 0 &&
             canvasHeight.intValue > 0 &&
-            !isGameOver.value &&
-            isGameStarted.value
+            !viewModel.isGameOver &&
+            viewModel.isRoundRunning
         ) {
             if (bugs.size < maxBugs) {
-                val id = nextBugId.intValue++
+                val id = viewModel.takeNextBugId()
                 //val type = BugType.entries.random()
                 val type = when (Random.nextInt(100)) {
                     in 0..50 -> BugType.NORMAL
@@ -303,11 +298,11 @@ fun GameCanvas(userId: Int, onChangePlayer: () -> Unit) {
         }
     }
 
-    LaunchedEffect(gameSession.intValue, isGameOver.value, isGameStarted.value) {
-        while (!isGameOver.value && isGameStarted.value){
+    LaunchedEffect(viewModel.gameSession, viewModel.isGameOver, viewModel.isRoundRunning) {
+        while (!viewModel.isGameOver && viewModel.isRoundRunning){
             delay(20_000L)
 
-            if(isGameOver.value || !isGameStarted.value){
+            if(viewModel.isGameOver || !viewModel.isRoundRunning){
                 break
             }
 
@@ -317,7 +312,7 @@ fun GameCanvas(userId: Int, onChangePlayer: () -> Unit) {
             }catch (e: Exception){null}
 
             if(rate != null){
-                val id = nextBugId.intValue++
+                val id = viewModel.takeNextBugId()
                 val x = Random.nextFloat() *
                         (LOGICAL_WIDTH - 220f).coerceAtLeast(0f)
 
@@ -345,13 +340,13 @@ fun GameCanvas(userId: Int, onChangePlayer: () -> Unit) {
 
     // Движение жуков и плавный поворот к цели
     LaunchedEffect(
-        gameSession.intValue,
-        isGameOver.value,
-        isGameStarted.value
+        viewModel.gameSession,
+        viewModel.isGameOver,
+        viewModel.isRoundRunning
     ) {
         var previousTime = 0L
 
-        while (!isGameOver.value && isGameStarted.value) {
+        while (!viewModel.isGameOver && viewModel.isRoundRunning) {
             val currentTime = withFrameNanos { it }
 
             val deltaTime = if (previousTime == 0L) {
@@ -365,7 +360,7 @@ fun GameCanvas(userId: Int, onChangePlayer: () -> Unit) {
             for (index in bugs.indices) {
                 val bug = bugs[index]
 
-                if (isBonusActive.value) {
+                if (viewModel.isBonusActive) {
                     val tiltSpeed = 350f
                     val dx = -tiltX.floatValue * tiltSpeed * speedMultiplier * deltaTime
                     val dy = tiltY.floatValue * tiltSpeed * speedMultiplier * deltaTime
@@ -389,30 +384,33 @@ fun GameCanvas(userId: Int, onChangePlayer: () -> Unit) {
 //                val dx = target.x - bug.x
 //                val dy = target.y - bug.y
 
-                val targetX = if(isBonusActive.value){
-                    when {
-                        tiltX.floatValue > 1f -> LOGICAL_WIDTH - bug.size
-                        tiltX.floatValue < -1f -> 0f
-                        else -> target.x
-                    }
-                }
-                else{
-                    target.x
-                }
+//                val targetX = if(viewModel.isBonusActive){
+//                    when {
+//                        tiltX.floatValue > 1f -> LOGICAL_WIDTH - bug.size
+//                        tiltX.floatValue < -1f -> 0f
+//                        else -> target.x
+//                    }
+//                }
+//                else{
+//                    target.x
+//                }
+//
+//                val targetY = if(viewModel.isBonusActive){
+//                    when{
+//                        tiltY.floatValue < -1f -> TOP_PANEL_HEIGHT
+//                        tiltY.floatValue > 1f -> LOGICAL_HEIGHT - bug.size
+//                        else -> target.y
+//                    }
+//                }
+//                else{
+//                    target.y
+//                }
 
-                val targetY = if(isBonusActive.value){
-                    when{
-                        tiltY.floatValue < -1f -> TOP_PANEL_HEIGHT
-                        tiltY.floatValue > 1f -> LOGICAL_HEIGHT - bug.size
-                        else -> target.y
-                    }
-                }
-                else{
-                    target.y
-                }
+                val targetX = target.x
+                val targetY = target.y
 
-                val dx = target.x - bug.x
-                val dy = target.y - bug.y
+                val dx = targetX - bug.x
+                val dy = targetY - bug.y
 
                 val movementAngle = Math.toDegrees(
                     atan2(dy, dx).toDouble()
@@ -448,61 +446,59 @@ fun GameCanvas(userId: Int, onChangePlayer: () -> Unit) {
         }
     }
 
-    val score = remember { mutableIntStateOf(0) }
+//    val score = remember { mutableIntStateOf(0) }
 
-    val hits = remember { mutableIntStateOf(0) }
+//    val hits = remember { mutableIntStateOf(0) }
+//
+//    val misses = remember { mutableIntStateOf(0) }
 
-    val misses = remember { mutableIntStateOf(0) }
-
-    val accuracy = if (hits.intValue + misses.intValue > 0) {
-        hits.intValue * 100 / (hits.intValue + misses.intValue)
+    val accuracy = if (viewModel.hits + viewModel.misses > 0) {
+        viewModel.hits * 100 / (viewModel.hits + viewModel.misses)
     } else {
         0
     }
 
-    LaunchedEffect(isGameOver.value, gameSession.intValue) {
-        if (isGameOver.value && savedSession != gameSession.intValue
+    LaunchedEffect(viewModel.isGameOver, viewModel.gameSession) {
+        if (viewModel.isGameOver && viewModel.savedSession != viewModel.gameSession
         ) {
             database.scoreDao().insertScore(
                 ScoreEntity(
                     userId = userId,
-                    points = score.intValue,
+                    points = viewModel.score,
                     difficulty = preferences.getInt("difficulty", 1),
                     speed = preferences.getInt("speed", 5),
                     roundDuration = roundDuration,
-                    hits = hits.intValue,
-                    misses = misses.intValue,
+                    hits = viewModel.hits,
+                    misses = viewModel.misses,
                     accuracy = accuracy.toFloat(),
                     date = System.currentTimeMillis()
                 )
             )
 
-            savedSession = gameSession.intValue
+            viewModel.markSessionSaved()
         }
     }
 
-    val timeLeft = remember { mutableIntStateOf(roundDuration) }
+    //val timeLeft = remember { mutableIntStateOf(roundDuration) }
 
     // Таймер раунда
     LaunchedEffect(
-        roundDuration,
-        gameSession.intValue,
-        isGameStarted.value
+        viewModel.gameSession,
+        viewModel.isRoundRunning
     ) {
-        if (!isGameStarted.value) {
+        viewModel.prepareRound(roundDuration)
+
+        if (!viewModel.isRoundRunning || viewModel.isGameOver) {
             return@LaunchedEffect
         }
 
-        timeLeft.intValue = roundDuration
-        isGameOver.value = false
-
-        while (timeLeft.intValue > 0 && !isGameOver.value) {
+        while (
+            viewModel.timeLeft > 0 &&
+            !viewModel.isGameOver &&
+            viewModel.isRoundRunning
+        ) {
             delay(1000L)
-            timeLeft.intValue--
-        }
-
-        if (timeLeft.intValue == 0) {
-            isGameOver.value = true
+            viewModel.tickTimer()
         }
     }
 
@@ -522,7 +518,7 @@ fun GameCanvas(userId: Int, onChangePlayer: () -> Unit) {
                 }
                 .pointerInput(Unit) {
                     detectTapGestures { tapOffset ->
-                        if (isGameOver.value || !isGameStarted.value) {
+                        if (viewModel.isGameOver || !viewModel.isRoundRunning) {
                             return@detectTapGestures
                         }
 
@@ -533,13 +529,13 @@ fun GameCanvas(userId: Int, onChangePlayer: () -> Unit) {
                             tapOffset.y * LOGICAL_HEIGHT / size.height
 
                         //проверяем нажатие на бонус
-                        val bonus = bonusPosition.value
+                        val bonus = viewModel.bonusPosition
 
                         if (bonus != null && kotlin.math.abs(tapX - bonus.x) < 60f &&
                             kotlin.math.abs(tapY - bonus.y) < 60f){
-                            bonusPosition.value = null
-                            isBonusActive.value = true
-                            bonusTimeLeft = 5
+
+                            viewModel.updateBonusPosition(null)
+                            viewModel.activateBonus()
 
                             if (soundLoaded.value) {
                                 soundPool.play(
@@ -569,15 +565,13 @@ fun GameCanvas(userId: Int, onChangePlayer: () -> Unit) {
 
                         if (hitBug != null) {
                             // Попадание по жуку
-                            score.intValue += hitBug.points
-                            hits.intValue++
+                            viewModel.addHit(hitBug.points)
 
                             currentBugs.value.remove(hitBug)
                             currentTargets.value.remove(hitBug.id)
                         } else {
                             // Промах
-                            score.intValue -= 5
-                            misses.intValue++
+                            viewModel.addMiss()
                         }
                     }
                 }
@@ -591,33 +585,34 @@ fun GameCanvas(userId: Int, onChangePlayer: () -> Unit) {
             )
 
             //БОНУС
-            bonusPosition.value?.let{position ->
+            viewModel.bonusPosition?.let{position ->
+                val paint = android.graphics.Paint().apply {
+                    textSize = 110f * minOf(size.width / LOGICAL_WIDTH, size.height / LOGICAL_HEIGHT )
+                    textAlign = android.graphics.Paint.Align.CENTER
+                }
                 drawContext.canvas.nativeCanvas.drawText(
                     "🌀",
                     position.x * size.width / LOGICAL_WIDTH,
                     position.y * size.height / LOGICAL_HEIGHT,
-                    android.graphics.Paint().apply {
-                        textSize = 110f * size.width / LOGICAL_WIDTH
-                        textAlign = android.graphics.Paint.Align.CENTER
-                    }
+                    paint
 
                 )
             }
         }
 
         // Панель статистики во время игры
-        if (isGameStarted.value && !isGameOver.value) {
+        if (viewModel.isRoundRunning && !viewModel.isGameOver) {
             GameStatsPanel(
-                score = score.intValue,
-                hits = hits.intValue,
-                misses = misses.intValue,
-                timeLeft = timeLeft.intValue
+                score = viewModel.score,
+                hits = viewModel.hits,
+                misses = viewModel.misses,
+                timeLeft = viewModel.timeLeft
             )
         }
 
         // Начальный экран
 
-       /* if (!isGameStarted.value && !isCountingDown.value && !isGameOver.value) {
+       /* if (!isGameStarted.value && !viewModel.isCountingDown && !isGameOver.value) {
             Box(
                 modifier = Modifier
                     .align(Alignment.Center),
@@ -632,9 +627,9 @@ fun GameCanvas(userId: Int, onChangePlayer: () -> Unit) {
             }
         }
 */        // Обратный отсчёт
-        if (isCountingDown.value) {
+        if (viewModel.isCountingDown) {
             Text(
-                text = countdown.intValue.toString(),
+                text = viewModel.countdown.toString(),
                 modifier = Modifier
                     .align(Alignment.Center)
                     .padding(24.dp),
@@ -644,36 +639,22 @@ fun GameCanvas(userId: Int, onChangePlayer: () -> Unit) {
         }
 
         // Экран результатов
-        if (isGameOver.value) {
+        if (viewModel.isGameOver) {
             Box(
                 modifier = Modifier.align(Alignment.Center)
             ) {
                 GameResultsScreen(
-                    score = score.intValue,
-                    hits = hits.intValue,
-                    misses = misses.intValue,
+                    score = viewModel.score,
+                    hits = viewModel.hits,
+                    misses = viewModel.misses,
                     accuracy = accuracy,
                     onReplayClick = {
-                        score.intValue = 0
-                        hits.intValue = 0
-                        misses.intValue = 0
-
-                        bugs.clear()
-                        targets.clear()
-
-                        bonusPosition.value = null
-                        isBonusActive.value = false
+                        viewModel.updateBonusPosition(null)
+                        viewModel.deactivateBonus()
                         tiltX.floatValue = 0f
                         tiltY.floatValue = 0f
 
-                        nextBugId.intValue = 1
-
-                        isGameOver.value = false
-                        isGameStarted.value = false
-                        countdown.intValue = 3
-                        isCountingDown.value = true
-
-                        gameSession.intValue++
+                        viewModel.replay(roundDuration)
                     } ,
                     onChangePlayerClick = onChangePlayer
                 )
