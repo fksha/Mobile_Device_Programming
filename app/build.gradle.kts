@@ -66,4 +66,6 @@ dependencies {
     implementation(libs.retrofit)
     implementation(libs.retrofit.scalars)
 
+    implementation(libs.koin.android)
+
 }
