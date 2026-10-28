@@ -12,12 +12,13 @@ import com.example.bugs_android.model.Bug
 private const val LOGICAL_WIDTH = 1000f
 private const val LOGICAL_HEIGHT = 1000f
 
-fun DrawScope.drawBugs(bugs: List<Bug>, normalImage: ImageBitmap, fastImage: ImageBitmap, rareImage: ImageBitmap) {
+fun DrawScope.drawBugs(bugs: List<Bug>, normalImage: ImageBitmap, fastImage: ImageBitmap, rareImage: ImageBitmap, goldImage: ImageBitmap) {
     for (bug in bugs) {
         val image = when (bug.imageResource) {
             R.drawable.bug_normal -> normalImage
             R.drawable.bug_fast -> fastImage
             R.drawable.bug_rare -> rareImage
+            R.drawable.bug_gold -> goldImage
             else -> continue
         }
         val scaleX = size.width / LOGICAL_WIDTH
