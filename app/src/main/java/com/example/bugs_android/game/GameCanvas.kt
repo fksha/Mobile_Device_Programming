@@ -46,10 +46,14 @@ import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.media.AudioAttributes
 import android.media.SoundPool
+import com.example.bugs_android.network.GoldRateRepository
+import kotlin.math.roundToInt
 
 private const val LOGICAL_WIDTH = 1000f
 private const val LOGICAL_HEIGHT = 1000f
 private const val TOP_PANEL_HEIGHT = 130f
+
+private const val GOLD_BUG_INTERVAL = 20_000L
 
 @Composable
 fun GameCanvas(userId: Int, onChangePlayer: () -> Unit) {
@@ -208,10 +212,14 @@ fun GameCanvas(userId: Int, onChangePlayer: () -> Unit) {
 
     val roundDuration = preferences.getInt("roundDuration", 60)
 
+    //7
+    var lastGoldBugTime by remember { mutableLongStateOf(System.currentTimeMillis()) }
 
     val normalImage = ImageBitmap.imageResource(R.drawable.bug_normal)
     val fastImage = ImageBitmap.imageResource(R.drawable.bug_fast)
     val rareImage = ImageBitmap.imageResource(R.drawable.bug_rare)
+    //7
+    val goldImage = ImageBitmap.imageResource(R.drawable.bug_gold)
 
     //Появление бонуса каждые 15 сек
     LaunchedEffect(gameSession.intValue, isGameStarted.value) {
@@ -292,6 +300,46 @@ fun GameCanvas(userId: Int, onChangePlayer: () -> Unit) {
             }
 
             delay(500L)
+        }
+    }
+
+    LaunchedEffect(gameSession.intValue, isGameOver.value, isGameStarted.value) {
+        while (!isGameOver.value && isGameStarted.value){
+            delay(20_000L)
+
+            if(isGameOver.value || !isGameStarted.value){
+                break
+            }
+
+            //Актуальный курс золота
+            val rate = try{
+                GoldRateRepository.getGoldRate()
+            }catch (e: Exception){null}
+
+            if(rate != null){
+                val id = nextBugId.intValue++
+                val x = Random.nextFloat() *
+                        (LOGICAL_WIDTH - 220f).coerceAtLeast(0f)
+
+                val y = TOP_PANEL_HEIGHT +
+                        Random.nextFloat() *
+                        (LOGICAL_HEIGHT - TOP_PANEL_HEIGHT - 220f)
+                            .coerceAtLeast(0f)
+                // 1/100 курса золота превращаем в игровые очки
+                val points = (rate.buy / 100.0).roundToInt()
+
+                val goldBug = createBug(
+                    type = BugType.GOLD,
+                    id = id,
+                    x = x,
+                    y = y
+                ).copy(points = points)
+
+                bugs.add(goldBug)
+                targets[goldBug.id] = createRandomTarget(goldBug.size)
+
+            }
+
         }
     }
 
@@ -538,7 +586,8 @@ fun GameCanvas(userId: Int, onChangePlayer: () -> Unit) {
                 bugs = bugs,
                 normalImage = normalImage,
                 fastImage = fastImage,
-                rareImage = rareImage
+                rareImage = rareImage,
+                goldImage = goldImage
             )
 
             //БОНУС
