@@ -7,4 +7,7 @@ val appModule = module {
     viewModel {
         GameViewModel()
     }
+    viewModel {
+        TournamentViewModel()
+    }
 }
