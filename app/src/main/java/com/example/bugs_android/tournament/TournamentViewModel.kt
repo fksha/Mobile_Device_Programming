@@ -33,6 +33,9 @@ class TournamentViewModel : ViewModel() {
     var isTournamentFinished = mutableStateOf(false)
         private set
 
+    var isRoundStarted = mutableStateOf(false)
+        private set
+
     // Текущий участник
     val currentPlayer: UserEntity?
         get() = participants.getOrNull(currentPlayerIndex.intValue)
@@ -46,6 +49,13 @@ class TournamentViewModel : ViewModel() {
 
         isTournamentActive.value = true
         isTournamentFinished.value = false
+        isRoundStarted.value = false
+    }
+
+    fun startCurrentRound() {
+        if (isTournamentActive.value && !isTournamentFinished.value) {
+            isRoundStarted.value = true
+        }
     }
 
     // Завершение раунда текущего участника
@@ -72,6 +82,8 @@ class TournamentViewModel : ViewModel() {
                 accuracy = accuracy
             )
         )
+
+        isRoundStarted.value = false
 
         // Проверяем, остались ли участники
         if (currentPlayerIndex.intValue < participants.lastIndex) {
