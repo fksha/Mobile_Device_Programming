@@ -110,4 +110,19 @@ class TournamentViewModel : ViewModel() {
     fun markResultsSaved() {
         areResultsSaved.value = true
     }
+
+    fun resetTournament() {
+        participants.clear()
+        results.clear()
+
+        currentPlayerIndex.intValue = 0
+
+        tournamentId.value = ""
+        tournamentDate.value = 0L
+        areResultsSaved.value = false
+
+        isTournamentActive.value = false
+        isTournamentFinished.value = false
+        isRoundStarted.value = false
+    }
 }

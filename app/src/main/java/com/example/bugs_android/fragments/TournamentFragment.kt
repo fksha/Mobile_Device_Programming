@@ -6,6 +6,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -13,7 +15,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.unit.dp
 import androidx.fragment.app.Fragment
 import com.example.bugs_android.GameViewModel
 import com.example.bugs_android.data.GameDatabase
@@ -30,7 +35,7 @@ import org.koin.androidx.viewmodel.ext.android.viewModel
 class TournamentFragment : Fragment() {
 
     private val tournamentViewModel: TournamentViewModel by activityViewModel()
-    private val gameViewModel: GameViewModel by viewModel()
+    private val gameViewModel: GameViewModel by activityViewModel()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -62,18 +67,28 @@ class TournamentFragment : Fragment() {
                 LaunchedEffect(
                     tournamentViewModel.isTournamentActive.value,
                     tournamentViewModel.isRoundStarted.value,
-                    tournamentViewModel.currentPlayer?.id
+                    tournamentViewModel.currentPlayer?.id,
+                    tournamentViewModel.currentPlayerIndex.intValue,
+                    tournamentViewModel.tournamentId.value
                 ) {
                     if (
                         tournamentViewModel.isTournamentActive.value &&
                         tournamentViewModel.isRoundStarted.value
                     ) {
                         tournamentViewModel.currentPlayer?.let { player ->
-                            gameViewModel.startTournamentRound(player.id)
+
+                            val roundKey =
+                                "${tournamentViewModel.tournamentId.value}_${tournamentViewModel.currentPlayerIndex.intValue}"
+
+                            gameViewModel.startTournamentRound(
+                                userId = player.id,
+                                roundKey = roundKey
+                            )
                         }
                     }
                 }
 
+                // Сохраняем результаты после завершения последнего раунда
                 LaunchedEffect(
                     tournamentViewModel.isTournamentFinished.value,
                     tournamentViewModel.tournamentId.value
@@ -105,6 +120,7 @@ class TournamentFragment : Fragment() {
                     }
                 }
 
+                // Выбор участников
                 if (
                     !tournamentViewModel.isTournamentActive.value &&
                     !tournamentViewModel.isTournamentFinished.value
@@ -168,7 +184,6 @@ class TournamentFragment : Fragment() {
                             tournamentViewModel.startTournament(selectedUsers)
                         }
                     )
-
                 }
 
                 // Турнир активен, но игрок ещё не начал свой раунд
@@ -178,7 +193,6 @@ class TournamentFragment : Fragment() {
                 ) {
 
                     tournamentViewModel.currentPlayer?.let { player ->
-
                         TournamentReadyScreen(
                             playerName = player.name,
                             currentRound =
@@ -190,7 +204,6 @@ class TournamentFragment : Fragment() {
                             }
                         )
                     }
-
                 }
 
                 // Игрок нажал "Играть"
@@ -200,7 +213,6 @@ class TournamentFragment : Fragment() {
                 ) {
 
                     tournamentViewModel.currentPlayer?.let { player ->
-
                         GameCanvas(
                             userId = player.id,
                             viewModel = gameViewModel,
@@ -219,12 +231,57 @@ class TournamentFragment : Fragment() {
                             }
                         )
                     }
-
                 }
 
                 // Все участники завершили свои раунды
                 else if (tournamentViewModel.isTournamentFinished.value) {
-                    Text(text = "Турнир завершён!")
+
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+
+                        Text(text = "Турнир завершён!")
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        if (tournamentViewModel.areResultsSaved.value) {
+
+                            // Повторить турнир с теми же участниками
+                            Button(
+                                onClick = {
+                                    val previousParticipants =
+                                        tournamentViewModel.participants.toList()
+
+                                    tournamentViewModel.startTournament(
+                                        previousParticipants
+                                    )
+                                },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text("Повторить турнир")
+                            }
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            // Выбрать новых участников
+                            Button(
+                                onClick = {
+                                    selectedUserIds = emptySet()
+                                    tournamentViewModel.resetTournament()
+                                },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text("Выбрать новых участников")
+                            }
+
+                        } else {
+                            Text("Сохраняем результаты турнира...")
+                        }
+                    }
                 }
             }
         }

@@ -1,3 +1,4 @@
+
 package com.example.bugs_android
 
 import androidx.compose.runtime.getValue
@@ -25,7 +26,6 @@ class GameViewModel : ViewModel() {
         selectedUserId = null
     }
 
-
     // Состояние игрового экрана и раунда
 
     var isGameStarted by mutableStateOf(false)
@@ -43,7 +43,6 @@ class GameViewModel : ViewModel() {
     var countdown by mutableIntStateOf(3)
         private set
 
-
     // Игровые объекты
 
     val bugs = mutableStateListOf<Bug>()
@@ -59,10 +58,10 @@ class GameViewModel : ViewModel() {
     var bonusTimeLeft by mutableIntStateOf(0)
         private set
 
-
     fun updateBonusPosition(position: Offset?) {
         bonusPosition = position
     }
+
     fun activateBonus() {
         isBonusActive = true
         bonusTimeLeft = 5
@@ -86,7 +85,6 @@ class GameViewModel : ViewModel() {
     fun takeNextBugId(): Int {
         return nextBugId++
     }
-
 
     // Статистика
 
@@ -115,7 +113,6 @@ class GameViewModel : ViewModel() {
         misses = 0
     }
 
-
     // Запуск игры и смена игрока
 
     fun startGame(userId: Int) {
@@ -126,8 +123,19 @@ class GameViewModel : ViewModel() {
         startCountdown()
     }
 
-    //РГР
-    fun startTournamentRound(userId: Int) {
+    // Защита от повторного запуска раунда турнира
+
+    private var startedTournamentRoundKey: String? = null
+
+    fun startTournamentRound(userId: Int, roundKey: String) {
+
+        // Если этот раунд уже запускался, ничего не сбрасываем
+        if (startedTournamentRoundKey == roundKey) {
+            return
+        }
+
+        startedTournamentRoundKey = roundKey
+
         selectedUserId = userId
         isGameStarted = true
         isGameOver = false
@@ -136,10 +144,13 @@ class GameViewModel : ViewModel() {
         resetStats()
         bugs.clear()
         targets.clear()
+
         gameSession++
         nextBugId = 1
+
         bonusPosition = null
         deactivateBonus()
+
         startCountdown()
     }
 
@@ -162,7 +173,6 @@ class GameViewModel : ViewModel() {
         deactivateBonus()
     }
 
-
     // Обратный отсчёт
 
     fun startCountdown() {
@@ -181,7 +191,6 @@ class GameViewModel : ViewModel() {
             isRoundRunning = true
         }
     }
-
 
     // Таймер раунда
 
@@ -217,7 +226,6 @@ class GameViewModel : ViewModel() {
         isRoundRunning = false
     }
 
-
     // Повторная игра
 
     fun replay(duration: Int) {
@@ -245,6 +253,4 @@ class GameViewModel : ViewModel() {
     fun markSessionSaved() {
         savedSession = gameSession
     }
-
-
 }
