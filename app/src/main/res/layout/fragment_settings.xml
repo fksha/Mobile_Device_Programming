@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/textViewSpeed"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="10dp"
+                android:layout_marginTop="10dp"
+                android:text="Скорость игры"
+                android:textSize="16sp" />
+
+            <SeekBar
+                android:id="@+id/seekBarSpeed"
+                style="@android:style/Widget.DeviceDefault.Light.SeekBar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:max="10"
+                android:progress="1"
+                android:progressBackgroundTint="#6F9AF6"
+                android:progressTint="#242EFF"
+                android:thumbTint="#242EFF" />
+
+            <TextView
+                android:id="@+id/textViewCountBugs"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="10dp"
+                android:layout_marginTop="10dp"
+                android:text="Максимальное количество жуков на экране"
+                android:textSize="16sp" />
+
+            <SeekBar
+                android:id="@+id/seekBarCountBugs"
+                style="@android:style/Widget.Material.SeekBar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:max="10"
+                android:progress="1"
+                android:progressBackgroundTint="#6F9AF6"
+                android:progressTint="#242EFF"
+                android:thumbTint="#242EFF" />
+
+            <TextView
+                android:id="@+id/textViewBonusInterval"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="10dp"
+                android:layout_marginTop="10dp"
+                android:text="Интервал появления бонусов (сек)"
+                android:textSize="16sp" />
+
+            <SeekBar
+                android:id="@+id/seekBarInterval"
+                style="@android:style/Widget.Material.Light.SeekBar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:max="60"
+                android:progress="6"
+                android:progressBackgroundTint="#6F9AF6"
+                android:progressTint="#242EFF"
+                android:thumbTint="#242EFF" />
+
+            <TextView
+                android:id="@+id/textViewTimeRound"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="10dp"
+                android:layout_marginTop="10dp"
+                android:text="Длительность раунда (сек)"
+                android:textSize="16sp" />
+
+            <SeekBar
+                android:id="@+id/seekBarTimeRound"
+                style="@android:style/Widget.Material.SeekBar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:max="300"
+                android:progress="30"
+                android:progressBackgroundTint="#6F9AF6"
+                android:progressTint="#242EFF"
+                android:thumbTint="#242EFF" />
+
+        </LinearLayout>
+    </ScrollView>
+
+</FrameLayout>
