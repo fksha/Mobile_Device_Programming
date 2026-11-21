@@ -126,6 +126,25 @@ class GameViewModel : ViewModel() {
         startCountdown()
     }
 
+    //РГР
+    fun startTournamentRound(userId: Int) {
+        selectedUserId = userId
+        isGameStarted = true
+
+        resetStats()
+
+        bugs.clear()
+        targets.clear()
+
+        gameSession++
+        nextBugId = 1
+
+        bonusPosition = null
+        deactivateBonus()
+
+        startCountdown()
+    }
+
     fun changePlayer() {
         selectedUserId = null
         isGameStarted = false

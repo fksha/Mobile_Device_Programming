@@ -56,7 +56,8 @@ private const val TOP_PANEL_HEIGHT = 130f
 
 
 @Composable
-fun GameCanvas(userId: Int, viewModel: GameViewModel, onChangePlayer: () -> Unit) {
+fun GameCanvas(userId: Int, viewModel: GameViewModel, onChangePlayer: () -> Unit,
+isTournament: Boolean = false, onTournamentRoundFinished: () -> Unit = {}) {
     //val bugs = remember { mutableStateListOf<Bug>() }
     val bugs = viewModel.bugs
 
@@ -459,7 +460,8 @@ fun GameCanvas(userId: Int, viewModel: GameViewModel, onChangePlayer: () -> Unit
     }
 
     LaunchedEffect(viewModel.isGameOver, viewModel.gameSession) {
-        if (viewModel.isGameOver && viewModel.savedSession != viewModel.gameSession
+        //РГР !isTournament
+        if (viewModel.isGameOver && viewModel.savedSession != viewModel.gameSession && !isTournament
         ) {
             database.scoreDao().insertScore(
                 ScoreEntity(
@@ -649,12 +651,18 @@ fun GameCanvas(userId: Int, viewModel: GameViewModel, onChangePlayer: () -> Unit
                     misses = viewModel.misses,
                     accuracy = accuracy,
                     onReplayClick = {
-                        viewModel.updateBonusPosition(null)
-                        viewModel.deactivateBonus()
-                        tiltX.floatValue = 0f
-                        tiltY.floatValue = 0f
+                        //РГР
+                        if (isTournament){
+                            onTournamentRoundFinished()
+                        }else{
+                            viewModel.updateBonusPosition(null)
+                            viewModel.deactivateBonus()
+                            tiltX.floatValue = 0f
+                            tiltY.floatValue = 0f
 
-                        viewModel.replay(roundDuration)
+                            viewModel.replay(roundDuration)
+                        }
+
                     } ,
                     onChangePlayerClick = onChangePlayer
                 )
