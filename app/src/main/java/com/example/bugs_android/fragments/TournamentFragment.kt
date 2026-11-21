@@ -15,10 +15,13 @@ import com.example.bugs_android.data.UserEntity
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import com.example.bugs_android.TournamentViewModel
 import com.example.bugs_android.game.TournamentEntryScreen
 import kotlinx.coroutines.launch
+import org.koin.androidx.viewmodel.ext.android.activityViewModel
 
 class TournamentFragment : Fragment() {
+    private val tournamentViewModel: TournamentViewModel by activityViewModel()
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -96,7 +99,9 @@ class TournamentFragment : Fragment() {
                         }
                     },
 
-                    onStartTournament ={}
+                    onStartTournament ={ selectedUsers ->
+                        tournamentViewModel.startTournament(selectedUsers)
+                    }
 
                 )
 

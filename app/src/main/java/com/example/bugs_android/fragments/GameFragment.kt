@@ -17,13 +17,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import com.example.bugs_android.GameViewModel
+import com.example.bugs_android.TournamentViewModel
 import com.example.bugs_android.game.GameCanvas
 import com.example.bugs_android.game.GameEntryScreen
 import kotlinx.coroutines.launch
+import org.koin.androidx.viewmodel.ext.android.activityViewModel
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class GameFragment : Fragment() {
     private val gameViewModel: GameViewModel by viewModel()
+    private val tournamentViewModel: TournamentViewModel by activityViewModel() //Для турнира
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
