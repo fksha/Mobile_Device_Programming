@@ -481,6 +481,13 @@ isTournament: Boolean = false, onTournamentRoundFinished: () -> Unit = {}) {
         }
     }
 
+    //РГР
+    // Автоматическое завершение раунда в турнире
+    LaunchedEffect(viewModel.isGameOver, viewModel.gameSession) {
+        if (isTournament && viewModel.isGameOver) {
+            onTournamentRoundFinished()
+        }
+    }
     //val timeLeft = remember { mutableIntStateOf(roundDuration) }
 
     // Таймер раунда
@@ -651,17 +658,13 @@ isTournament: Boolean = false, onTournamentRoundFinished: () -> Unit = {}) {
                     misses = viewModel.misses,
                     accuracy = accuracy,
                     onReplayClick = {
-                        //РГР
-                        if (isTournament){
-                            onTournamentRoundFinished()
-                        }else{
-                            viewModel.updateBonusPosition(null)
-                            viewModel.deactivateBonus()
-                            tiltX.floatValue = 0f
-                            tiltY.floatValue = 0f
+                        viewModel.updateBonusPosition(null)
+                        viewModel.deactivateBonus()
+                        tiltX.floatValue = 0f
+                        tiltY.floatValue = 0f
 
-                            viewModel.replay(roundDuration)
-                        }
+                        viewModel.replay(roundDuration)
+
 
                     } ,
                     onChangePlayerClick = onChangePlayer

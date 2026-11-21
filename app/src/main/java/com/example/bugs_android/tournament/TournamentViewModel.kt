@@ -1,10 +1,12 @@
-package com.example.bugs_android
+
+package com.example.bugs_android.tournament
 
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import com.example.bugs_android.data.UserEntity
+import java.util.UUID
 
 data class TournamentResult(
     val userId: Int,
@@ -16,7 +18,7 @@ data class TournamentResult(
 )
 
 class TournamentViewModel : ViewModel() {
-    //участники турнира
+
     var participants = mutableStateListOf<UserEntity>()
         private set
 
@@ -26,7 +28,6 @@ class TournamentViewModel : ViewModel() {
     var currentPlayerIndex = mutableIntStateOf(0)
         private set
 
-    //состояние турнира
     var isTournamentActive = mutableStateOf(false)
         private set
 
@@ -36,16 +37,30 @@ class TournamentViewModel : ViewModel() {
     var isRoundStarted = mutableStateOf(false)
         private set
 
-    // Текущий участник
+    var tournamentId = mutableStateOf("")
+        private set
+
+    var tournamentDate = mutableStateOf(0L)
+        private set
+
+    var areResultsSaved = mutableStateOf(false)
+        private set
+
     val currentPlayer: UserEntity?
         get() = participants.getOrNull(currentPlayerIndex.intValue)
 
-    // Начало турнира
     fun startTournament(users: List<UserEntity>) {
         participants.clear()
         participants.addAll(users)
 
+        results.clear()
+
         currentPlayerIndex.intValue = 0
+
+        tournamentId.value = UUID.randomUUID().toString()
+        tournamentDate.value = System.currentTimeMillis()
+
+        areResultsSaved.value = false
 
         isTournamentActive.value = true
         isTournamentFinished.value = false
@@ -58,7 +73,6 @@ class TournamentViewModel : ViewModel() {
         }
     }
 
-    // Завершение раунда текущего участника
     fun finishCurrentRound(
         score: Int,
         hits: Int,
@@ -85,12 +99,15 @@ class TournamentViewModel : ViewModel() {
 
         isRoundStarted.value = false
 
-        // Проверяем, остались ли участники
         if (currentPlayerIndex.intValue < participants.lastIndex) {
             currentPlayerIndex.intValue++
         } else {
             isTournamentActive.value = false
             isTournamentFinished.value = true
         }
+    }
+
+    fun markResultsSaved() {
+        areResultsSaved.value = true
     }
 }

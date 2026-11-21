@@ -17,7 +17,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import com.example.bugs_android.GameViewModel
-import com.example.bugs_android.TournamentViewModel
+import com.example.bugs_android.tournament.TournamentViewModel
 import com.example.bugs_android.game.GameCanvas
 import com.example.bugs_android.game.GameEntryScreen
 import kotlinx.coroutines.launch

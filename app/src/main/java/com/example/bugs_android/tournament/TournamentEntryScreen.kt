@@ -1,5 +1,5 @@
 
-package com.example.bugs_android.game
+package com.example.bugs_android.tournament
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState

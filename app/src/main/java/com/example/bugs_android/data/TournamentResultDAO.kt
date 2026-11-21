@@ -14,7 +14,7 @@ interface TournamentResultDAO {
     @Query("""
         SELECT * FROM tournament_results
         WHERE tournamentId = :tournamentId
-        ORDER BY score DESC
+        ORDER BY score DESC, accuracy DESC, userId ASC
     """)
     suspend fun getResultsForTournament(
         tournamentId: String

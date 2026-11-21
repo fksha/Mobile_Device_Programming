@@ -130,18 +130,16 @@ class GameViewModel : ViewModel() {
     fun startTournamentRound(userId: Int) {
         selectedUserId = userId
         isGameStarted = true
+        isGameOver = false
+        isRoundRunning = false
 
         resetStats()
-
         bugs.clear()
         targets.clear()
-
         gameSession++
         nextBugId = 1
-
         bonusPosition = null
         deactivateBonus()
-
         startCountdown()
     }
 
