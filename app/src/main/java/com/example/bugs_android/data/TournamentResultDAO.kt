@@ -12,6 +12,13 @@ interface TournamentResultDAO {
     suspend fun insertResults(results: List<TournamentResultEntity>)
 
     @Query("""
+        UPDATE tournament_results
+        SET isDeleted = 1
+        WHERE userId = :userId
+    """)
+    suspend fun markPlayerAsDeleted(userId: Int)
+
+    @Query("""
         SELECT * FROM tournament_results
         WHERE tournamentId = :tournamentId
         ORDER BY score DESC, accuracy DESC, userId ASC

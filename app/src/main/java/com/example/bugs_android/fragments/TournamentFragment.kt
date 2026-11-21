@@ -184,6 +184,10 @@ class TournamentFragment : Fragment() {
 
                         onDeleteUser = { user ->
                             coroutineScope.launch {
+                                // Помечаем результаты турниров как удалённые
+                                database.tournamentResultDao()
+                                    .markPlayerAsDeleted(user.id)
+
                                 database.userDao().deleteUser(user)
 
                                 users = database.userDao().getAllUsers()

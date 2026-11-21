@@ -109,8 +109,19 @@ fun TournamentResultsScreen(
                                             .padding(vertical = 6.dp)
                                     ) {
                                         Text(
-                                            text = "${resultIndex + 1}. ${result.userName}",
-                                            style = MaterialTheme.typography.titleSmall
+                                            text = buildString {
+                                                append("${resultIndex + 1}. ${result.userName}")
+
+                                                if (result.isDeleted) {
+                                                    append(" (удалён)")
+                                                }
+                                            },
+                                            style = MaterialTheme.typography.titleSmall,
+                                            color = if (result.isDeleted) {
+                                                MaterialTheme.colorScheme.error
+                                            } else {
+                                                MaterialTheme.colorScheme.onSurface
+                                            }
                                         )
 
                                         Text("Очки: ${result.score}")

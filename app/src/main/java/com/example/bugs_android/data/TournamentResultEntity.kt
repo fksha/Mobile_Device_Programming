@@ -19,5 +19,6 @@ data class TournamentResultEntity(
     val score: Int,
     val hits: Int,
     val misses: Int,
-    val accuracy: Int
+    val accuracy: Int,
+    val isDeleted: Boolean = false
 )

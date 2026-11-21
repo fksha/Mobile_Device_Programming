@@ -14,7 +14,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         ScoreEntity::class,
         TournamentResultEntity::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = true
 )
 abstract class GameDatabase : RoomDatabase() {
@@ -45,6 +45,17 @@ abstract class GameDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    ALTER TABLE tournament_results
+                    ADD COLUMN isDeleted INTEGER NOT NULL DEFAULT 0
+                    """
+                )
+            }
+        }
+
         @Volatile
         private var INSTANCE: GameDatabase? = null
 
@@ -55,7 +66,10 @@ abstract class GameDatabase : RoomDatabase() {
                     GameDatabase::class.java,
                     "bugs_database"
                 )
-                    .addMigrations(MIGRATION_2_3)
+                    .addMigrations(
+                        MIGRATION_2_3,
+                        MIGRATION_3_4
+                    )
                     .build()
 
                 INSTANCE = instance
