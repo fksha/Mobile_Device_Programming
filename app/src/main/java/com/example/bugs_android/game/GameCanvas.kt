@@ -47,11 +47,15 @@ import android.hardware.SensorManager
 import android.media.AudioAttributes
 import android.media.SoundPool
 import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.ui.input.pointer.PointerId
+import androidx.compose.ui.input.pointer.changedToDown
+import androidx.compose.ui.input.pointer.changedToUp
 import com.example.bugs_android.GameViewModel
 import com.example.bugs_android.network.GoldRateRepository
 import com.example.bugs_android.tournament.TournamentSettings
 import kotlin.math.roundToInt
-
+import android.util.Log
 private const val LOGICAL_WIDTH = 1000f
 private const val LOGICAL_HEIGHT = 1000f
 private const val TOP_PANEL_HEIGHT = 130f
@@ -580,66 +584,107 @@ fun GameCanvas(userId: Int,
                     canvasWidth.intValue = size.width
                     canvasHeight.intValue = size.height
                 }
+
                 .pointerInput(Unit) {
-                    awaitEachGesture {
-                        val fi
-                    }
-                    detectTapGestures { tapOffset ->
-                        if (viewModel.isGameOver || !viewModel.isRoundRunning) {
-                            return@detectTapGestures
-                        }
+                    awaitEachGesture {//запускает обработку каждого отдельного жеста. После завершения одного жеста начинает ждать следующий.
+                        val startPositions = mutableMapOf<PointerId, Offset>()
+                        val movedPointers = mutableSetOf<PointerId>()
 
-                        val tapX =
-                            tapOffset.x * LOGICAL_WIDTH / size.width
 
-                        val tapY =
-                            tapOffset.y * LOGICAL_HEIGHT / size.height
 
-                        //проверяем нажатие на бонус
-                        val bonus = viewModel.bonusPosition
+                        do {
+                            val event = awaitPointerEvent()
 
-                        if (bonus != null && kotlin.math.abs(tapX - bonus.x) < 60f &&
-                            kotlin.math.abs(tapY - bonus.y) < 60f){
+                            for (change in event.changes) {
 
-                            viewModel.updateBonusPosition(null)
-                            viewModel.activateBonus()
+                                // Если появился новый палец, запоминаем его координаты
+                                if (change.changedToDown()) {
+                                    startPositions[change.id] = change.position
+                                    movedPointers.remove(change.id)
+                                }
 
-                            if (soundLoaded.value) {
-                                soundPool.play(
-                                    soundId.intValue,
-                                    1f,
-                                    1f,
-                                    1,
-                                    0,
-                                    1f
-                                )
+                                // Проверяем, перемещался ли палец
+                                val start = startPositions[change.id]
+
+                                if (start != null && change.pressed) {
+                                    val dx = change.position.x - start.x
+                                    val dy = change.position.y - start.y
+
+                                    val distanceSquared = dx * dx + dy * dy
+                                    val touchSlop = viewConfiguration.touchSlop
+
+                                    if (distanceSquared > touchSlop * touchSlop) {
+                                        movedPointers.add(change.id)
+                                    }
+                                }
+
+                                // Когда палец отпущен, удаляем его данные
+                                if (!change.pressed && startPositions.containsKey(change.id)) {
+
+                                    val startPosition = startPositions[change.id]
+
+                                    if (
+                                        startPosition != null &&
+                                        change.id !in movedPointers &&
+                                        !viewModel.isGameOver &&
+                                        viewModel.isRoundRunning
+                                    ) {
+                                        val tapX =
+                                            startPosition.x * LOGICAL_WIDTH / size.width
+
+                                        val tapY =
+                                            startPosition.y * LOGICAL_HEIGHT / size.height
+
+                                        // Проверяем нажатие на бонус
+                                        val bonus = viewModel.bonusPosition
+
+                                        if (
+                                            bonus != null &&
+                                            kotlin.math.abs(tapX - bonus.x) < 60f &&
+                                            kotlin.math.abs(tapY - bonus.y) < 60f
+                                        ) {
+                                            viewModel.updateBonusPosition(null)
+                                            viewModel.activateBonus()
+
+                                            if (soundLoaded.value) {
+                                                soundPool.play(
+                                                    soundId.intValue,
+                                                    1f,
+                                                    1f,
+                                                    1,
+                                                    0,
+                                                    1f
+                                                )
+                                            }
+                                        } else if (tapY >= TOP_PANEL_HEIGHT) {
+
+                                            // Ищем жука под пальцем
+                                            val hitBug = currentBugs.value.lastOrNull { bug ->
+                                                tapX >= bug.x &&
+                                                        tapX <= bug.x + bug.size &&
+                                                        tapY >= bug.y &&
+                                                        tapY <= bug.y + bug.size
+                                            }
+
+                                            if (hitBug != null) {
+                                                // Попадание
+                                                viewModel.addHit(hitBug.points)
+
+                                                currentBugs.value.remove(hitBug)
+                                                currentTargets.value.remove(hitBug.id)
+                                            } else {
+                                                // Промах
+                                                viewModel.addMiss()
+                                            }
+                                        }
+                                    }
+
+                                    startPositions.remove(change.id)
+                                    movedPointers.remove(change.id)
+                                }
                             }
 
-                            return@detectTapGestures
-                        }
-
-                        // Нажатие на верхнюю панель не считается промахом
-                        if (tapY < TOP_PANEL_HEIGHT) {
-                            return@detectTapGestures
-                        }
-
-                        val hitBug = currentBugs.value.lastOrNull { bug ->
-                            tapX >= bug.x &&
-                                    tapX <= bug.x + bug.size &&
-                                    tapY >= bug.y &&
-                                    tapY <= bug.y + bug.size
-                        }
-
-                        if (hitBug != null) {
-                            // Попадание по жуку
-                            viewModel.addHit(hitBug.points)
-
-                            currentBugs.value.remove(hitBug)
-                            currentTargets.value.remove(hitBug.id)
-                        } else {
-                            // Промах
-                            viewModel.addMiss()
-                        }
+                        } while (event.changes.any { it.pressed })
                     }
                 }
         ) {
