@@ -26,9 +26,9 @@ class ViewPagerAdapter(activity: FragmentActivity) :
             2 -> GameFragment()
             3 -> TournamentFragment()
             4 -> TournamentResultsFragment()
-            3 -> AuthorsFragment()
-            4 -> SettingsFragment()
-            5 -> RecordsFragment()
+            5 -> AuthorsFragment()
+            6 -> SettingsFragment()
+            7 -> RecordsFragment()
             else -> RegistrationFragment()
         }
     }
