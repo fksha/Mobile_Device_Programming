@@ -46,6 +46,7 @@ import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.media.AudioAttributes
 import android.media.SoundPool
+import androidx.compose.foundation.gestures.awaitEachGesture
 import com.example.bugs_android.GameViewModel
 import com.example.bugs_android.network.GoldRateRepository
 import com.example.bugs_android.tournament.TournamentSettings
@@ -87,15 +88,22 @@ fun GameCanvas(userId: Int,
     val soundLoaded = remember { mutableStateOf(false) }
     var lastSoundTime by remember { mutableLongStateOf(0L) }
 
+    val countdownSoundId = remember { mutableIntStateOf(0) }
+    val countdownSoundLoaded = remember { mutableStateOf(false) }
+
     DisposableEffect(soundPool) {
         soundPool.setOnLoadCompleteListener { _, sampleId, status ->
             if (status == 0) {
-                soundId.intValue = sampleId
-                soundLoaded.value = true
+                when (sampleId) {
+                    soundId.intValue -> soundLoaded.value = true
+                    countdownSoundId.intValue -> countdownSoundLoaded.value = true
+
+                }
             }
         }
 
-        soundPool.load(context, R.raw.sound, 1)
+        soundId.intValue = soundPool.load(context, R.raw.sound, 1)
+        countdownSoundId.intValue = soundPool.load(context, R.raw.countdown, 1)
 
         onDispose {
             soundPool.release()
@@ -255,6 +263,22 @@ fun GameCanvas(userId: Int,
     // Обратный отсчёт перед началом игры
     LaunchedEffect(viewModel.isCountingDown, viewModel.countdown) {
         if (viewModel.isCountingDown && viewModel.countdown > 0) {
+
+            // Ждём, пока загрузится звук
+            while (!countdownSoundLoaded.value) {
+                delay(50L)
+            }
+
+            // Проигрываем звук
+            soundPool.play(
+                countdownSoundId.intValue,
+                1f,
+                1f,
+                1,
+                0,
+                1f
+            )
+
             delay(1000L)
             viewModel.tickCountdown()
         }
@@ -491,6 +515,27 @@ fun GameCanvas(userId: Int,
         }
     }
 
+    // Звук последних трёх секунд игры
+    LaunchedEffect(viewModel.timeLeft, viewModel.isGameOver) {
+        if (
+            viewModel.timeLeft in 1..3 &&
+            !viewModel.isGameOver
+        ) {
+            while (!countdownSoundLoaded.value) {
+                delay(50L)
+            }
+
+            soundPool.play(
+                countdownSoundId.intValue,
+                1f,
+                1f,
+                1,
+                0,
+                1f
+            )
+        }
+    }
+
     //РГР
     // Автоматическое завершение раунда в турнире
     LaunchedEffect(viewModel.isGameOver, viewModel.gameSession) {
@@ -536,6 +581,9 @@ fun GameCanvas(userId: Int,
                     canvasHeight.intValue = size.height
                 }
                 .pointerInput(Unit) {
+                    awaitEachGesture {
+                        val fi
+                    }
                     detectTapGestures { tapOffset ->
                         if (viewModel.isGameOver || !viewModel.isRoundRunning) {
                             return@detectTapGestures

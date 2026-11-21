@@ -226,6 +226,17 @@ class GameViewModel : ViewModel() {
         isRoundRunning = false
     }
 
+    private var gameOverSoundPlayedSession = -1
+
+    fun markGameOverSoundPlayed(): Boolean {
+        if (gameOverSoundPlayedSession == gameSession) {
+            return false
+        }
+
+        gameOverSoundPlayedSession = gameSession
+        return true
+    }
+
     // Повторная игра
 
     fun replay(duration: Int) {
