@@ -48,6 +48,7 @@ import android.media.AudioAttributes
 import android.media.SoundPool
 import com.example.bugs_android.GameViewModel
 import com.example.bugs_android.network.GoldRateRepository
+import com.example.bugs_android.tournament.TournamentSettings
 import kotlin.math.roundToInt
 
 private const val LOGICAL_WIDTH = 1000f
@@ -56,8 +57,12 @@ private const val TOP_PANEL_HEIGHT = 130f
 
 
 @Composable
-fun GameCanvas(userId: Int, viewModel: GameViewModel, onChangePlayer: () -> Unit,
-isTournament: Boolean = false, onTournamentRoundFinished: () -> Unit = {}) {
+fun GameCanvas(userId: Int,
+               viewModel: GameViewModel,
+               onChangePlayer: () -> Unit,
+               isTournament: Boolean = false,
+               onTournamentRoundFinished: () -> Unit = {},
+               tournamentSettings: TournamentSettings? = null) {
     //val bugs = remember { mutableStateListOf<Bug>() }
     val bugs = viewModel.bugs
 
@@ -208,11 +213,16 @@ isTournament: Boolean = false, onTournamentRoundFinished: () -> Unit = {}) {
 
     val canvasHeight = remember { mutableIntStateOf(0) }
 
-    val maxBugs = preferences.getInt("maxBugs", 5)
+    val maxBugs = tournamentSettings?.maxBugs
+        ?: preferences.getInt("maxBugs", 5)
 
-    val speedMultiplier = preferences.getInt("speed", 5) / 5f
+    val speed = tournamentSettings?.speed
+        ?: preferences.getInt("speed", 5)
 
-    val roundDuration = preferences.getInt("roundDuration", 60)
+    val speedMultiplier = speed / 5f
+
+    val roundDuration = tournamentSettings?.roundDuration
+        ?: preferences.getInt("roundDuration", 60)
 
     //7
     //var lastGoldBugTime by remember { mutableLongStateOf(System.currentTimeMillis()) }

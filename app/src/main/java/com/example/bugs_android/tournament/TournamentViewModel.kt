@@ -17,8 +17,16 @@ data class TournamentResult(
     val accuracy: Int
 )
 
+data class TournamentSettings(
+    val roundDuration: Int,
+    val speed: Int,
+    val maxBugs: Int
+)
+
 class TournamentViewModel : ViewModel() {
 
+    var settings = mutableStateOf<TournamentSettings?>(null)
+        private set
     var participants = mutableStateListOf<UserEntity>()
         private set
 
@@ -49,22 +57,25 @@ class TournamentViewModel : ViewModel() {
     val currentPlayer: UserEntity?
         get() = participants.getOrNull(currentPlayerIndex.intValue)
 
-    fun startTournament(users: List<UserEntity>) {
+    fun startTournament(
+        users: List<UserEntity>,
+        tournamentSettings: TournamentSettings
+    ) {
         participants.clear()
         participants.addAll(users)
 
-        results.clear()
+        settings.value = tournamentSettings
 
         currentPlayerIndex.intValue = 0
-
-        tournamentId.value = UUID.randomUUID().toString()
-        tournamentDate.value = System.currentTimeMillis()
-
-        areResultsSaved.value = false
-
         isTournamentActive.value = true
         isTournamentFinished.value = false
         isRoundStarted.value = false
+
+        results.clear()
+
+        tournamentId.value = UUID.randomUUID().toString()
+        tournamentDate.value = System.currentTimeMillis()
+        areResultsSaved.value = false
     }
 
     fun startCurrentRound() {
@@ -124,5 +135,6 @@ class TournamentViewModel : ViewModel() {
         isTournamentActive.value = false
         isTournamentFinished.value = false
         isRoundStarted.value = false
+        settings.value = null
     }
 }

@@ -1,6 +1,7 @@
 
 package com.example.bugs_android.fragments
 
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -27,6 +28,7 @@ import com.example.bugs_android.data.UserEntity
 import com.example.bugs_android.game.GameCanvas
 import com.example.bugs_android.tournament.TournamentEntryScreen
 import com.example.bugs_android.tournament.TournamentReadyScreen
+import com.example.bugs_android.tournament.TournamentSettings
 import com.example.bugs_android.tournament.TournamentViewModel
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.activityViewModel
@@ -57,6 +59,21 @@ class TournamentFragment : Fragment() {
                 }
 
                 val coroutineScope = rememberCoroutineScope()
+
+                val preferences = remember {
+                    requireContext().getSharedPreferences(
+                        "game_settings",
+                        Context.MODE_PRIVATE
+                    )
+                }
+
+                fun readTournamentSettings(): TournamentSettings {
+                    return TournamentSettings(
+                        roundDuration = preferences.getInt("roundDuration", 60),
+                        speed = preferences.getInt("speed", 5),
+                        maxBugs = preferences.getInt("maxBugs", 5)
+                    )
+                }
 
                 // Загружаем зарегистрированных игроков
                 LaunchedEffect(Unit) {
@@ -181,7 +198,10 @@ class TournamentFragment : Fragment() {
                         },
 
                         onStartTournament = { selectedUsers ->
-                            tournamentViewModel.startTournament(selectedUsers)
+                            tournamentViewModel.startTournament(
+                                selectedUsers,
+                                readTournamentSettings()
+                            )
                         }
                     )
                 }
@@ -228,7 +248,8 @@ class TournamentFragment : Fragment() {
                                     hits = gameViewModel.hits,
                                     misses = gameViewModel.misses
                                 )
-                            }
+                            },
+                            tournamentSettings = tournamentViewModel.settings.value
                         )
                     }
                 }
@@ -253,11 +274,11 @@ class TournamentFragment : Fragment() {
                             // Повторить турнир с теми же участниками
                             Button(
                                 onClick = {
-                                    val previousParticipants =
-                                        tournamentViewModel.participants.toList()
+                                    val previousParticipants = tournamentViewModel.participants.toList()
 
                                     tournamentViewModel.startTournament(
-                                        previousParticipants
+                                        previousParticipants,
+                                        readTournamentSettings()
                                     )
                                 },
                                 modifier = Modifier.fillMaxWidth()
