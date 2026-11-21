@@ -56,6 +56,10 @@ import com.example.bugs_android.network.GoldRateRepository
 import com.example.bugs_android.tournament.TournamentSettings
 import kotlin.math.roundToInt
 import android.util.Log
+import android.os.Build
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
 private const val LOGICAL_WIDTH = 1000f
 private const val LOGICAL_HEIGHT = 1000f
 private const val TOP_PANEL_HEIGHT = 130f
@@ -75,6 +79,34 @@ fun GameCanvas(userId: Int,
     val targets = viewModel.targets
 
     val context = LocalContext.current
+
+    val vibrator = remember {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val manager = context.getSystemService(
+                Context.VIBRATOR_MANAGER_SERVICE
+            ) as VibratorManager
+
+            manager.defaultVibrator
+        } else {
+            @Suppress("DEPRECATION")
+            context.getSystemService(
+                Context.VIBRATOR_SERVICE
+            ) as Vibrator
+        }
+    }
+
+    fun vibrate(duration: Long, amplitude: Int) {
+        if (!vibrator.hasVibrator()) return
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            vibrator.vibrate(
+                VibrationEffect.createOneShot(duration, amplitude)
+            )
+        } else {
+            @Suppress("DEPRECATION")
+            vibrator.vibrate(duration)
+        }
+    }
 
     val soundPool = remember {
         SoundPool.Builder()
@@ -643,6 +675,8 @@ fun GameCanvas(userId: Int,
                                             kotlin.math.abs(tapX - bonus.x) < 60f &&
                                             kotlin.math.abs(tapY - bonus.y) < 60f
                                         ) {
+                                            vibrate(80L, 160)
+
                                             viewModel.updateBonusPosition(null)
                                             viewModel.activateBonus()
 
@@ -667,13 +701,15 @@ fun GameCanvas(userId: Int,
                                             }
 
                                             if (hitBug != null) {
-                                                // Попадание
+                                                // Короткая вибрация при попадании
+                                                vibrate(40L, 100)
                                                 viewModel.addHit(hitBug.points)
 
                                                 currentBugs.value.remove(hitBug)
                                                 currentTargets.value.remove(hitBug.id)
                                             } else {
-                                                // Промах
+                                                // Более продолжительная вибрация при промахе
+                                                vibrate(180L, 255)
                                                 viewModel.addMiss()
                                             }
                                         }
